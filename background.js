@@ -16,14 +16,14 @@ chrome.action.onClicked.addListener((tab) => {
         .then(response => response.json())
         .then(data => {
           // Show result in an alert
-          alert(data.result);
-        })
-        .catch(error => {
-          alert('Error processing text: ' + error.message);
-        });
-      } else {
-        alert('Please select some text first!');
-      }
+            alert(data.result);
+          })
+          .catch(error => {
+            alert('错误: ' + error.message);
+          });
+        } else {
+          alert('请先选择影剧名!');
+        }
     }
   });
 });

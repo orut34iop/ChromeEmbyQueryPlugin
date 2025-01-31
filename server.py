@@ -8,20 +8,20 @@ CORS(app)
 
 # Emby 配置
 EMBY_HOST = "http://192.168.2.42:8096"  # 修改为你的 Emby 服务器地址
-API_KEY = "YOUR_API_KEY"  # 修改为你的 API key
+API_KEY = "850d6a3a78bc4ec6b584077b34b2a956"  # 修改为你的 API key
 
 def search_emby(query):
     """搜索 Emby 库中的内容"""
     url = f"{EMBY_HOST}/emby/Items"
     
     params = {
-        'api_key': '850d6a3a78bc4ec6b584077b34b2a956',
-        'searchTerm': query,
+        'api_key': f"{API_KEY}",
+        'SearchTerm': query,
         'IncludeItemTypes': 'Movie,Series',  # 只搜索电影和剧集
         'Recursive': 'true',
-        'SearchTypes': 'Name',  # 按名称搜索
-        'Fields': 'ProductionYear',
-        'Limit': 5  # 限制返回结果数量
+		'SearchTypes': 'Name',  # 按名称搜索
+        'Fields': 'ProductionYear,ProviderIds,Path',
+        'Limit': 50  # 限制返回结果数量
     }
     
     try:
@@ -29,7 +29,10 @@ def search_emby(query):
         response.raise_for_status()
         data = response.json()
         
-        if data.get('TotalRecordCount', 0) == 0:
+
+        items = data.get('Items', [])
+        items_count = len(items)  # 计算Items的个数
+        if items_count == 0:
             return "Emby库中未找到相关影片"
             
         results = []
@@ -37,7 +40,8 @@ def search_emby(query):
             item_type = "电影" if item['Type'] == 'Movie' else "剧集"
             name = item.get('Name', '')
             year = item.get('ProductionYear', '')
-            results.append(f"Emby库中找到影剧：{item_type}: {name} ({year})")
+            Path = item.get('Path', '')
+            results.append(f"影剧已找到：{item_type}: {name} ({year}) ({Path})")
             
         return "\n".join(results)
         
