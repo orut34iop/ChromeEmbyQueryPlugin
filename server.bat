@@ -1,21 +1,15 @@
 @echo off
-chcp 936
 
-set pythonPath="python"
 
-for /F "usebackq tokens=*" %%A in (`%pythonPath% --version 2^>^&1`) do set PYTHON_VERSION=%%A
+:: 查找Python路径并存储到pythonPath变量中
+for /f "tokens=*" %%i in ('where python') do set pythonPath=%%i && goto :foundPython
 
-if "%PYTHON_VERSION:~0,6%" == "Python" (
-    echo Python 版本: %PYTHON_VERSION%
-    %pythonPath% -c "import sys; print(sys.executable)"
-) else (
-    echo 未能检测到Python，请确认安装并添加至系统路径。
-    exit /b
-)
+:foundPython
+echo Python路径是: %pythonPath%
 
 :: 设置变量
 set "startupVbs=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\chromeEmbyQueryPlugin.vbs"
-set "batPath=%~dp0server.bat"
+set "batPath=%~dp0server.py"
 
 :: 创建一个有效的VBS脚本
 (
@@ -27,7 +21,10 @@ echo startupVbs路径: %startupVbs%
 
 echo 正在将命令写入VBS脚本并保存至启动文件夹...
 timeout /nobreak /t 1 >nul
-echo 请手动关闭此窗口
+
 
 :: 如果需要立即测试新创建的VBS脚本，请取消以下行的注释:
-:: wscript.exe "%startupVbs%"
+wscript.exe "%startupVbs%"
+
+echo 请手动关闭此窗口
+pause
