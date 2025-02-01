@@ -21,7 +21,7 @@ def search_emby(query):
         'Recursive': 'true',
 		'SearchTypes': 'Name',  # 按名称搜索
         'Fields': 'ProductionYear,ProviderIds,Path',
-        'Limit': 50  # 限制返回结果数量
+        'Limit': 500  # 限制返回结果数量
     }
     
     try:
@@ -34,15 +34,27 @@ def search_emby(query):
         items_count = len(items)  # 计算Items的个数
         if items_count == 0:
             return "Emby库中未找到相关影片"
-            
+
         results = []
+        movie_results = "电影：\n"
+        show_results = "电视：\n"
+
         for item in data.get('Items', []):
-            item_type = "电影" if item['Type'] == 'Movie' else "剧集"
+            item_type = "电影" if item['Type'] == 'Movie' else "电视"
             name = item.get('Name', '')
             year = item.get('ProductionYear', '')
-            Path = item.get('Path', '')
-            results.append(f"影剧已找到：{item_type}: {name} ({year}) ({Path})")
+            path = item.get('Path', '')  # 为了遵循Python命名规范，将变量名 'Path' 改为 'path'
             
+            # 根据类型添加到对应的结果字符串中
+            if item_type == "电影":
+                movie_results += f"{name} ({year})  --->  {path}\n"
+            else:
+                show_results += f"{name} ({year})  --->  {path}\n"
+
+        # 将结果合并
+        if movie_results != "电影：\n": results.append(movie_results)
+        if show_results != "电视：\n": results.append(show_results)
+
         return "\n".join(results)
         
     except Exception as e:
