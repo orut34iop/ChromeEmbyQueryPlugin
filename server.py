@@ -28,7 +28,7 @@ def search_emby(query):
         response = requests.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        
+
 
         items = data.get('Items', [])
         items_count = len(items)  # 计算Items的个数
@@ -50,6 +50,41 @@ def search_emby(query):
                 movie_results += f"{name} ({year})  --->  {path}\n"
             else:
                 show_results += f"{name} ({year})  --->  {path}\n"
+                # 查询季的信息
+                seasons_url = f"{EMBY_HOST}/emby/Shows/{item['Id']}/Seasons"
+                seasons_params = {
+                    'api_key': API_KEY,
+                    'Fields': 'TotalRecordCount'
+                }
+                seasons_response = requests.get(seasons_url, params=seasons_params)
+                seasons_response.raise_for_status()
+                seasons_data = seasons_response.json()
+                
+                # 获取 TotalRecordCount 的值,表示一共有多少条season的记录
+                total_record_count = data.get("TotalRecordCount")
+
+                for season in seasons_data.get('Items', []):
+                    season_number = season.get('IndexNumber', '未知季')
+                    show_results += f"第 {season_number} 季:\n"
+                    
+                    # 查询每集的信息
+                    episodes_url = f"{EMBY_HOST}/emby/Shows/{item['Id']}/Episodes"
+                    episodes_params = {
+                        'api_key': API_KEY,
+                        'SeasonId': season['Id'],
+                        'Fields': 'Path'
+                    }
+                    episodes_response = requests.get(episodes_url, params=episodes_params)
+                    episodes_response.raise_for_status()
+                    episodes_data = episodes_response.json()
+                    
+                    for episode in episodes_data.get('Items', []):
+                        episode_name = episode.get('Name', '未知集')
+                        episode_path = episode.get('Path', '无路径')
+                        show_results += f"  {episode_name}  --->  {episode_path}\n"
+                        break  # 只显示第一集
+                show_results += "\n"
+
 
         # 将结果合并
         if movie_results != "电影：\n": results.append(movie_results)

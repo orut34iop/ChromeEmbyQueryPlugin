@@ -22,7 +22,7 @@ echo startupVbs路径: %startupVbs%
 echo 正在将命令写入VBS脚本并保存至启动文件夹...
 timeout /nobreak /t 1 >nul
 
-
+echo 立即执行创建的VBS脚本...
 :: 如果需要立即测试新创建的VBS脚本，请取消以下行的注释:
 wscript.exe "%startupVbs%"
 
