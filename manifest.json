@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Python Text Processor",
+  "name": "Emby Query",
   "version": "1.0",
-  "description": "Process selected text with Python code",
+  "description": "Query selected name in Emby server",
   "permissions": [
     "activeTab",
     "scripting",
