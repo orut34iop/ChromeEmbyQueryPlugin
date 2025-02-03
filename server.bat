@@ -24,7 +24,7 @@ timeout /nobreak /t 1 >nul
 
 echo 立即执行创建的VBS脚本...
 :: 如果需要立即测试新创建的VBS脚本，请取消以下行的注释:
-wscript.exe "%startupVbs%"
+cmd /c start wscript.exe "%startupVbs%"
 
 echo 请手动关闭此窗口
 pause
