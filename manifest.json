@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "contextMenus"
+    "contextMenus",
+    "tabs"
   ],
   "action": {
     "default_icon": {
@@ -25,6 +26,8 @@
     }
   ],
   "host_permissions": [
-    "http://localhost/*"
+    "http://localhost/*",
+    "https://*/*",
+    "http://*/*"
   ]
 }
