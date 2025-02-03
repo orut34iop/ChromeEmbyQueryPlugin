@@ -96,8 +96,8 @@ def process_text():
     try:
         data = request.get_json()
         text = data.get('text', '')
-        emby_host = data.get('embyHost', 'http://192.168.2.42:8096')
-        api_key = data.get('apiKey', '850d6a3a78bc4ec6b584077b34b2a956')
+        emby_host = data.get('embyHost', 'http://127.0.0.1:8096')
+        api_key = data.get('apiKey', '888888888888888888888')
         
         # 调用 Emby 搜索函数，传入配置
         result = search_emby(text, emby_host=emby_host, api_key=api_key)
