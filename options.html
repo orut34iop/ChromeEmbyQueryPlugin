@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Emby Query 设置</title>
+  <style>
+    body { 
+      padding: 20px; 
+      font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    }
+    .option-row { margin: 10px 0; }
+    label { display: inline-block; width: 120px; }
+    input { 
+      width: 300px; 
+      padding: 5px;
+      font-family: inherit;
+    }
+    button { 
+      margin-top: 20px;
+      padding: 8px 16px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="option-row">
+    <label for="embyHost">Emby 服务器地址:</label>
+    <input type="text" id="embyHost" placeholder="例如: http://192.168.1.100:8096">
+  </div>
+  <div class="option-row">
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" placeholder="输入你的 API key">
+  </div>
+  <button id="save">保存设置</button>
+  <div id="status"></div>
+  <script src="options.js"></script>
+</body>
+</html>

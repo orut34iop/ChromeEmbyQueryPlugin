@@ -8,52 +8,62 @@ function processSelectedText(selectedText, tab) {
     return;
   }
 
-  fetch('http://localhost:5000/process', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text: selectedText })
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('网络请求失败');
-    }
-    return response.json();
-  })
-  .then(data => {
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      function: (result) => {
-        const lines = result.split('\n');
-        const maxLength = Math.max(...lines.map(line => line.length));
-        const totalLines = lines.length;
-        const width = Math.max(600, maxLength * 8);
-        const height = Math.max(400, totalLines * 16);
-        const newWindow = window.open('', '', `width=${width},height=${height}`);
-        newWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                body { margin: 20px; font-family: monospace; }
-                pre { white-space: pre-wrap; }
-              </style>
-            </head>
-            <body>
-              <pre>${result}</pre>
-            </body>
-          </html>
-        `);
+  // 获取配置
+  chrome.storage.sync.get({
+    embyHost: 'http://192.168.2.42:8096',
+    apiKey: '850d6a3a78bc4ec6b584077b34b2a956'
+  }, function(config) {
+    fetch('http://localhost:5000/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      args: [data.result]
-    });
-  })
-  .catch(error => {
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      function: (message) => alert('错误: ' + message),
-      args: [error.message]
+      body: JSON.stringify({ 
+        text: selectedText,
+        embyHost: config.embyHost,
+        apiKey: config.apiKey
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('网络请求失败');
+      }
+      return response.json();
+    })
+    .then(data => {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: (result) => {
+          const lines = result.split('\n');
+          const maxLength = Math.max(...lines.map(line => line.length));
+          const totalLines = lines.length;
+          const width = Math.max(600, maxLength * 8);
+          const height = Math.max(400, totalLines * 16);
+          const newWindow = window.open('', '', `width=${width},height=${height}`);
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <style>
+                  body { margin: 20px; font-family: monospace; }
+                  pre { white-space: pre-wrap; }
+                </style>
+              </head>
+              <body>
+                <pre>${result}</pre>
+              </body>
+            </html>
+          `);
+        },
+        args: [data.result]
+      });
+    })
+    .catch(error => {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: (message) => alert('错误: ' + message),
+        args: [error.message]
+      });
     });
   });
 }

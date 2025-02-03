@@ -7,7 +7,8 @@
     "activeTab",
     "scripting",
     "contextMenus",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "action": {
     "default_icon": {
@@ -29,5 +30,6 @@
     "http://localhost/*",
     "https://*/*",
     "http://*/*"
-  ]
+  ],
+  "options_page": "options.html"
 }

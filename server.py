@@ -6,16 +6,12 @@ import sys
 app = Flask(__name__)
 CORS(app)
 
-# Emby 配置
-EMBY_HOST = "http://192.168.2.42:8096"  # 修改为你的 Emby 服务器地址
-API_KEY = "850d6a3a78bc4ec6b584077b34b2a956"  # 修改为你的 API key
-
-def search_emby(query):
+def search_emby(query, emby_host, api_key):
     """搜索 Emby 库中的内容"""
-    url = f"{EMBY_HOST}/emby/Items"
+    url = f"{emby_host}/emby/Items"
     
     params = {
-        'api_key': f"{API_KEY}",
+        'api_key': api_key,
         'SearchTerm': query,
         'IncludeItemTypes': 'Movie,Series',  # 只搜索电影和剧集
         'Recursive': 'true',
@@ -51,9 +47,9 @@ def search_emby(query):
             else:
                 show_results += f"{name} ({year})  --->  {path}\n"
                 # 查询季的信息
-                seasons_url = f"{EMBY_HOST}/emby/Shows/{item['Id']}/Seasons"
+                seasons_url = f"{emby_host}/emby/Shows/{item['Id']}/Seasons"
                 seasons_params = {
-                    'api_key': API_KEY,
+                    'api_key': api_key,
                     'Fields': 'TotalRecordCount'
                 }
                 seasons_response = requests.get(seasons_url, params=seasons_params)
@@ -68,9 +64,9 @@ def search_emby(query):
                     show_results += f"第 {season_number} 季:\n"
                     
                     # 查询每集的信息
-                    episodes_url = f"{EMBY_HOST}/emby/Shows/{item['Id']}/Episodes"
+                    episodes_url = f"{emby_host}/emby/Shows/{item['Id']}/Episodes"
                     episodes_params = {
-                        'api_key': API_KEY,
+                        'api_key': api_key,
                         'SeasonId': season['Id'],
                         'Fields': 'Path'
                     }
@@ -100,9 +96,11 @@ def process_text():
     try:
         data = request.get_json()
         text = data.get('text', '')
+        emby_host = data.get('embyHost', 'http://192.168.2.42:8096')
+        api_key = data.get('apiKey', '850d6a3a78bc4ec6b584077b34b2a956')
         
-        # 调用 Emby 搜索函数
-        result = search_emby(text)
+        # 调用 Emby 搜索函数，传入配置
+        result = search_emby(text, emby_host=emby_host, api_key=api_key)
         
         return jsonify({'result': result})
     except Exception as e:
