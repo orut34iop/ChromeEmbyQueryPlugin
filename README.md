@@ -35,7 +35,7 @@ pip install -r requirements.txt
    - 点击保存
 
 4. 启动后端服务：
-   - 双击 `server.bat` 在后台运行服务。
+   - 双击 `server.bat` 在后台运行服务。这个步骤只需要安装时执行一次，安装插件后每次开机会自动运行后台脚本
 
 ## 使用方法
 
