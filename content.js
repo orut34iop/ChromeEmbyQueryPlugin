@@ -11,7 +11,6 @@ icon.style.zIndex = '10000';
 icon.style.opacity = '1'; // 设置为不透明
 document.body.appendChild(icon);
 
-
 // 使图标跟随鼠标选中的文本位置
 document.addEventListener('mouseup', (event) => {
   const selectedText = window.getSelection().toString().trim();
@@ -20,8 +19,9 @@ document.addEventListener('mouseup', (event) => {
     const rect = range.getBoundingClientRect();
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
-    icon.style.left = `${rect.left + scrollX + (rect.width / 2) - (icon.width / 2)}px`;
-    icon.style.top = `${rect.bottom + scrollY + 8}px`;
+    // 修改位置计算，将图标放在选中文本的右边
+    icon.style.left = `${rect.right + scrollX + 8}px`;  // 右边距离选中文本8像素
+    icon.style.top = `${rect.top + scrollY + (rect.height - icon.height) / 2}px`;  // 垂直居中
     icon.style.display = 'block';
   } else {
     icon.style.display = 'none';
