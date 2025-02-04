@@ -13,7 +13,7 @@
 
 
 ## 安装步骤
-注意: 下面说明针对windows系统环境， 如果是ubuntu/mac系统，会有些许区别，请遇到问题请自行咨询kimi或者deepkeep解决
+注意: 下面说明针对windows系统环境， 如果是ubuntu/mac系统，会有些许区别，请遇到问题请自行咨询kimi或者deepseek解决
 
 下载插件代码到本地（如：c:\chromepluin\ChromeEmbyQueryPlugin），
 cd c:\chromepluin\ChromeEmbyQueryPlugin
