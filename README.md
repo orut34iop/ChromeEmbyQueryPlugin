@@ -13,6 +13,7 @@
 
 
 ## 安装步骤
+注意: 下面说明针对windows系统环境， 如果是ubuntu/mac系统，会有些许区别，请遇到问题请自行咨询kimi或者deepkeep解决
 
 下载插件代码到本地（如：c:\chromepluin\ChromeEmbyQueryPlugin），
 cd c:\chromepluin\ChromeEmbyQueryPlugin
@@ -23,7 +24,7 @@ cd c:\chromepluin\ChromeEmbyQueryPlugin
 ```bash
 pip install -r requirements.txt
 ```
-
+注意： Ubuntu和mac命令可能有稍微不同，请自行搜索解决
 2. 加载 Chrome 扩展：
    - 打开 Chrome，访问 `chrome://extensions/`
    - 开启右上角的"开发者模式"
@@ -36,7 +37,7 @@ pip install -r requirements.txt
 
 4. 启动后端服务：
    - 双击 `server.bat` 在后台运行服务。这个步骤只需要安装时执行一次，安装插件后每次开机会自动运行后台脚本
-
+注意： Ubuntu和mac命令可能有稍微不同，请自行搜索解决，或者需要使用插件前手动运行"python server.py"命令
 ## 使用方法
 
 1. 在任意网页上选中影视剧名称
