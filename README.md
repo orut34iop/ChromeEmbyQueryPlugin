@@ -25,6 +25,7 @@ cd c:\chromepluin\ChromeEmbyQueryPlugin
 pip install -r requirements.txt
 ```
 注意： Ubuntu和mac命令可能有稍微不同，请自行搜索解决
+
 2. 加载 Chrome 扩展：
    - 打开 Chrome，访问 `chrome://extensions/`
    - 开启右上角的"开发者模式"
