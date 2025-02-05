@@ -23,6 +23,9 @@
 
 如果你遇到问题/或者自行修复偶尔遇到的问题，请在issues留下说明记录，以帮助修复插件缺陷，谢谢
 
+下载插件代码到本地：
+git clone https://github.com/orut34iop/ChromeEmbyQueryPlugin.git
+
 ### 1. 安装 Python 依赖
 
 ```bash
