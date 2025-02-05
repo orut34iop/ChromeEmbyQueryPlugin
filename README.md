@@ -1,3 +1,5 @@
+更多交流和技术讨论，请加群：https://t.me/embyfans
+
 # Emby Query Chrome Extension
 
 这是一个 Chrome 扩展，用于快速查询 Emby 媒体库中的内容。当你在网页上选中影视剧名称时，可以通过浮动图标或右键菜单快速查询该名称的影剧是否已经存在 Emby 影剧库中。
