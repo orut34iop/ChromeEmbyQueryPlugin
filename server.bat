@@ -14,7 +14,7 @@ set "batPath=%~dp0server.py"
 :: 创建一个有效的VBS脚本
 (
 echo Set WshShell = CreateObject("WScript.Shell"^)
-echo WshShell.Run "%pythonPath% %batPath%", 0, True
+echo WshShell.Run  "uv run python  %batPath%", 0, True
 ) > "%startupVbs%"
 
 echo startupVbs路径: %startupVbs%

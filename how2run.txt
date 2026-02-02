@@ -1,0 +1,3 @@
+PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv venv
+PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv pip install -r requirements.txt
+PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv run python server.py

@@ -11,6 +11,53 @@ icon.style.zIndex = '10000';
 icon.style.opacity = '1'; // 设置为不透明
 document.body.appendChild(icon);
 
+// 添加临时启用文本选择的功能
+function enableTextSelection(element) {
+  if (!element) return;
+  
+  const originalStyles = {
+    userSelect: element.style.userSelect,
+    webkitUserSelect: element.style.webkitUserSelect,
+    mozUserSelect: element.style.mozUserSelect,
+    msUserSelect: element.style.msUserSelect
+  };
+
+  element.style.userSelect = 'text';
+  element.style.webkitUserSelect = 'text';
+  element.style.mozUserSelect = 'text';
+  element.style.msUserSelect = 'text';
+
+  return originalStyles;
+}
+
+function restoreTextSelection(element, originalStyles) {
+  if (!element || !originalStyles) return;
+  
+  element.style.userSelect = originalStyles.userSelect;
+  element.style.webkitUserSelect = originalStyles.webkitUserSelect;
+  element.style.mozUserSelect = originalStyles.mozUserSelect;
+  element.style.msUserSelect = originalStyles.msUserSelect;
+}
+
+// 修改鼠标事件监听
+document.addEventListener('mousedown', function(event) {
+  const target = event.target;
+  const computedStyle = window.getComputedStyle(target);
+  
+  if (computedStyle.userSelect === 'none' || 
+      computedStyle.webkitUserSelect === 'none') {
+    const originalStyles = enableTextSelection(target);
+    
+    // 在mouseup时恢复样式
+    const restoreStyles = function(e) {
+      restoreTextSelection(target, originalStyles);
+      document.removeEventListener('mouseup', restoreStyles);
+    };
+    
+    document.addEventListener('mouseup', restoreStyles);
+  }
+});
+
 // 使图标跟随鼠标选中的文本位置
 document.addEventListener('mouseup', (event) => {
   const selectedText = window.getSelection().toString().trim();
@@ -28,14 +75,25 @@ document.addEventListener('mouseup', (event) => {
   }
 });
 
-// 点击图标时处理选中文本
+// 修改点击图标时的处理
 icon.addEventListener('click', function() {
-  const selectedText = window.getSelection().toString().trim();
+  const selection = window.getSelection();
+  const selectedText = selection.toString().trim();
+  
   if (selectedText) {
+    const range = selection.getRangeAt(0);
+    const element = range.commonAncestorContainer.parentElement;
+    
+    // 临时启用选择以确保能获取到文本
+    const originalStyles = enableTextSelection(element);
+    
     chrome.runtime.sendMessage({ 
       action: 'processText', 
       text: selectedText 
     });
+    
+    // 恢复原始样式
+    restoreTextSelection(element, originalStyles);
   } else {
     alert('请先选择文本');
   }
