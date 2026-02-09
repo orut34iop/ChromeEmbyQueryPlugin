@@ -1,9 +1,41 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 import requests
 import sys
+import logging
+import time
+from functools import lru_cache
+
+# 导入配置
+try:
+    from config import (
+        SERVER_HOST, SERVER_PORT, DEBUG_MODE,
+        MAX_CONTENT_LENGTH, ALLOWED_HOSTS,
+        REQUEST_TIMEOUT, EMBY_API_TIMEOUT,
+        CACHE_TTL, LOG_LEVEL, LOG_FORMAT,
+        SEARCH_ITEM_TYPES, SEARCH_LIMIT, SEARCH_FIELDS
+    )
+except ImportError:
+    # 默认配置
+    SERVER_HOST, SERVER_PORT = '127.0.0.1', 5000
+    DEBUG_MODE = False
+    MAX_CONTENT_LENGTH = 1024 * 1024
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1']
+    REQUEST_TIMEOUT = EMBY_API_TIMEOUT = 10
+    CACHE_TTL = 300
+    LOG_LEVEL, LOG_FORMAT = 'INFO', '%(asctime)s - %(levelname)s - %(message)s'
+    SEARCH_ITEM_TYPES, SEARCH_LIMIT = 'Movie,Series', 500
+    SEARCH_FIELDS = 'ProductionYear,ProviderIds,Path'
+
+# 配置日志
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
+    format=LOG_FORMAT
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 CORS(app)
 
 def search_emby(query, emby_host, api_key):
@@ -13,15 +45,15 @@ def search_emby(query, emby_host, api_key):
     params = {
         'api_key': api_key,
         'SearchTerm': query,
-        'IncludeItemTypes': 'Movie,Series',  # 只搜索电影和剧集
+        'IncludeItemTypes': SEARCH_ITEM_TYPES,  # 只搜索电影和剧集
         'Recursive': 'true',
 		'SearchTypes': 'Name',  # 按名称搜索
-        'Fields': 'ProductionYear,ProviderIds,Path',
-        'Limit': 500  # 限制返回结果数量
+        'Fields': SEARCH_FIELDS,
+        'Limit': SEARCH_LIMIT  # 限制返回结果数量
     }
     
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=EMBY_API_TIMEOUT)
         response.raise_for_status()
         data = response.json()
 
@@ -57,7 +89,7 @@ def search_emby(query, emby_host, api_key):
                 seasons_data = seasons_response.json()
                 
                 # 获取 TotalRecordCount 的值,表示一共有多少条season的记录
-                total_record_count = data.get("TotalRecordCount")
+                total_record_count = seasons_data.get("TotalRecordCount")
 
                 for season in seasons_data.get('Items', []):
                     season_number = season.get('IndexNumber', '未知季')
@@ -91,20 +123,53 @@ def search_emby(query, emby_host, api_key):
     except Exception as e:
         return f"搜索出错: {str(e)}"
 
+# 简单的请求缓存
+search_cache = {}
+CACHE_TTL = CACHE_TTL  # 使用配置文件中的值
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """健康检查接口"""
+    return jsonify({'status': 'ok', 'timestamp': time.time()})
+
 @app.route('/process', methods=['POST'])
 def process_text():
+    # 安全：只允许本地请求
+    if request.remote_addr not in ALLOWED_HOSTS:
+        logger.warning(f"拒绝非本地请求: {request.remote_addr}")
+        abort(403)
+    
     try:
         data = request.get_json()
-        text = data.get('text', '')
-        emby_host = data.get('embyHost', 'http://127.0.0.1:8096')
-        api_key = data.get('apiKey', '888888888888888888888')
+        if not data:
+            return jsonify({'error': '无效的请求数据'}), 400
+            
+        text = data.get('text', '').strip()
+        if not text:
+            return jsonify({'error': '搜索文本不能为空'}), 400
+            
+        emby_host = data.get('embyHost', '').strip()
+        api_key = data.get('apiKey', '').strip()
+        
+        if not emby_host or not api_key:
+            return jsonify({'error': 'Emby 服务器地址和 API Key 不能为空'}), 400
+        
+        logger.info(f"搜索查询: '{text}' 来自 {request.remote_addr}")
         
         # 调用 Emby 搜索函数，传入配置
         result = search_emby(text, emby_host=emby_host, api_key=api_key)
         
         return jsonify({'result': result})
+    except requests.Timeout:
+        logger.error("请求 Emby 服务器超时")
+        return jsonify({'error': '连接 Emby 服务器超时'}), 504
+    except requests.RequestException as e:
+        logger.error(f"请求 Emby 服务器失败: {e}")
+        return jsonify({'error': f'连接 Emby 服务器失败: {str(e)}'}), 502
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"处理请求时出错: {e}")
+        return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    logger.info(f"启动 Emby Query 服务器... http://{SERVER_HOST}:{SERVER_PORT}")
+    app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG_MODE)

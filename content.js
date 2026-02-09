@@ -76,7 +76,8 @@ document.addEventListener('mouseup', (event) => {
 });
 
 // 修改点击图标时的处理
-icon.addEventListener('click', function() {
+icon.addEventListener('click', function(e) {
+  e.stopPropagation();  // 阻止事件冒泡，防止触发 document 的 click
   const selection = window.getSelection();
   const selectedText = selection.toString().trim();
   
@@ -94,7 +95,24 @@ icon.addEventListener('click', function() {
     
     // 恢复原始样式
     restoreTextSelection(element, originalStyles);
+    
+    // 发送消息后隐藏图标
+    icon.style.display = 'none';
   } else {
     alert('请先选择文本');
+  }
+});
+
+// 点击页面其他地方时隐藏图标
+document.addEventListener('click', function(event) {
+  if (event.target !== icon && icon.style.display === 'block') {
+    icon.style.display = 'none';
+  }
+});
+
+// ESC 键隐藏图标
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && icon.style.display === 'block') {
+    icon.style.display = 'none';
   }
 });

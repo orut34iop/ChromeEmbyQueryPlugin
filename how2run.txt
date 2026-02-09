@@ -1,3 +1,71 @@
-PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv venv
-PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv pip install -r requirements.txt
-PS C:\ChromePlugIn\ChromeEmbyQueryPlugin> uv run python server.py
+========================
+Emby Query 服务器启动说明
+========================
+
+【前置要求】
+1. 安装 uv（Python 包管理器）
+   Windows: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   Mac/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+2. 无需手动安装依赖，uv 会自动处理
+
+========================
+快速启动（前台运行，用于调试）
+========================
+
+Windows:
+    run.bat
+
+Mac/Linux:
+    ./run.sh
+
+
+========================
+安装开机启动服务
+========================
+
+Windows:
+    server.bat
+    （双击后会创建开机启动项并立即启动）
+
+Mac:
+    chmod +x server.sh
+    ./server.sh
+
+Ubuntu/Linux:
+    chmod +x server.sh
+    ./server.sh
+
+
+========================
+常用命令
+========================
+
+# 检查服务是否运行
+Windows: tasklist | findstr python
+Mac:     launchctl list | grep embyquery
+Ubuntu:  systemctl --user status embyquery
+
+# 停止服务
+Windows: 任务管理器结束 python 进程
+Mac:     launchctl unload ~/Library/LaunchAgents/com.embyquery.server.plist
+Ubuntu:  systemctl --user stop embyquery
+
+# 手动启动（调试模式）
+uv run python server.py
+
+
+========================
+配置文件说明
+========================
+
+config.py     - 服务器配置（端口、超时等）
+pyproject.toml - uv 项目配置和依赖
+
+
+========================
+健康检查
+========================
+
+浏览器访问: http://127.0.0.1:5000/health
+返回: {"status": "ok"}

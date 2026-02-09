@@ -12,7 +12,6 @@
     "activeTab",
     "scripting",
     "contextMenus",
-    "tabs",
     "storage"
   ],
   "action": {
@@ -31,9 +30,7 @@
     }
   ],
   "host_permissions": [
-    "http://localhost/*",
-    "https://*/*",
-    "http://*/*"
+    "http://localhost:5000/*"
   ],
   "options_page": "options.html"
 }

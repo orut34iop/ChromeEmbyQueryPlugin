@@ -4,11 +4,14 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVER_SCRIPT="$SCRIPT_DIR/server.py"
 
-# 检查 Python 是否安装
-if ! command -v python3 &> /dev/null; then
-    echo "Python3 未安装，请先安装 Python3"
+# 检查 uv 是否安装
+if ! command -v uv &> /dev/null; then
+    echo "uv 未安装，请先安装 uv"
+    echo "安装命令: curl -LsSf https://astral.sh/uv/install.sh | sh"
     exit 1
 fi
+
+echo "[信息] 使用 uv 运行 Python 脚本..."
 
 # 创建开机启动脚本
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -23,9 +26,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     <string>com.embyquery.server</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
+        <string>$(which uv)</string>
+        <string>run</string>
+        <string>python</string>
         <string>${SERVER_SCRIPT}</string>
     </array>
+    <key>WorkingDirectory</key>
+    <string>${SCRIPT_DIR}</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
@@ -48,7 +55,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 ${SERVER_SCRIPT}
+WorkingDirectory=${SCRIPT_DIR}
+ExecStart=$(which uv) run python ${SERVER_SCRIPT}
 Restart=always
 
 [Install]
@@ -62,8 +70,7 @@ EOF
     echo "已创建并启动 Ubuntu/Linux 系统服务"
 fi
 
-# 立即启动服务器
-python3 "$SERVER_SCRIPT" &
-
-echo "服务器已在后台启动"
-echo "使用 'ps aux | grep server.py' 查看进程状态"
+# 立即启动服务器（前台运行，用于测试）
+echo "启动服务器..."
+cd "$SCRIPT_DIR"
+uv run python "$SERVER_SCRIPT"
