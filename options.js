@@ -1,20 +1,14 @@
-const DEFAULT_HOST = 'http://192.168.2.42:8096';
+const DEFAULT_HOST = 'http://192.168.2.43:8096';
+const DEFAULT_API_KEY = 'd3928cf0934b4280be51ff33ce8dfeca';
 
 document.addEventListener('DOMContentLoaded', function() {
-  // 加载保存的设置（API Key 默认为空，强制用户配置）
+  // 加载保存的设置
   chrome.storage.sync.get({
     embyHost: DEFAULT_HOST,
-    apiKey: ''
+    apiKey: DEFAULT_API_KEY
   }, function(items) {
     document.getElementById('embyHost').value = items.embyHost || DEFAULT_HOST;
-    document.getElementById('apiKey').value = items.apiKey;
-    
-    // 如果 API Key 为空，显示提示
-    if (!items.apiKey) {
-      const status = document.getElementById('status');
-      status.style.color = '#e74c3c';
-      status.textContent = '请先配置 API Key';
-    }
+    document.getElementById('apiKey').value = items.apiKey || DEFAULT_API_KEY;
   });
 });
 

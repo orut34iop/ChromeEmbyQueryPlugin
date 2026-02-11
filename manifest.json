@@ -12,7 +12,8 @@
     "activeTab",
     "scripting",
     "contextMenus",
-    "storage"
+    "storage",
+    "notifications"
   ],
   "action": {
     "default_icon": {
@@ -31,6 +32,12 @@
   ],
   "host_permissions": [
     "http://localhost:5000/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*.png"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "options_page": "options.html"
 }

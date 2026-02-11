@@ -1,118 +1,196 @@
-// This script runs in the context of web pages
+// Emby Query 内容脚本
+(function() {
+  // 避免重复注入
+  if (window.embyQueryInjected) return;
+  window.embyQueryInjected = true;
 
-// 创建浮动图标
-const icon = document.createElement('img');
-icon.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrUlEQVR4nO2XyU8TARTG52KAihZks4KAkYOJF0P/ABcKggWKYK1UZDXoQUPiZRITY8EqIiA7WLSKVRZriwlBjKhRkAa1MU0FEVGJBFRc4u75M1MdI7J0ZtqJnaRf8qXt7fe9efPeK0F45ZVnSqorXLTKtPsA9UkIE76gM9pUgOjLed0xPft9CGHC5yPKmI+ojlxhhJDOBX8pD5EduYhoz/bsENIF4Fe252BlWzYiLu7yzBBSJvCtjgBYYcjqjqlJ9BEkfPiFLIQbdkJyXu0ZIaQc4FecV0PSoobkbOb/DeES/LlMLD+7A2H67WaC2hO6wkWhzcoDju9CgV+uVyHszHaENivNoTqlOUS3DcFN6b8CCQb+tCMAKPiQUxkIbspAUGM6v60VbSpQ8QUf3JiOoIatCKxT8Pskooz5JXzBL6tPw7I6BQJrFZ28hKBaKNKY3zkffIm1FbGmfa7CI7AmFeLq5G7Cne3kDJ6qvPX1KD5++4pqWydiLuZxhg+oTkFAVTLElXL3hGACT7XN4OQIvn3/4fDz91MoutMIiV7FDf6kHEsr5VhakeRaCKbwVNtYJobx+cvXGb77cghJVw5yhN+CJeVJ8C9L5BaCDTzV8/3jdnz4+GlOm4b7sM6whzX8khOJVAAsPp7ALgRbeOqFvf3Mhul3H+b15PQ0KiyXEKnLZAm/GYtLE+B3LJ5ZCC7w1At7c9SKV2/eOrV9fAyF3RUIrk1jDC86Fg/RURl8j8SpeIGnps31x/cxMfWasa8NDWJ1007m8FrZYd7gqVHZMzSI8YlJRr5qt2CDoch98JSijbkqVzZsl30AY+MvF7R19DH2dlUiqDqVMbzfkTgNwVSR7bkk1/PgysN+jIy9mNOPnj5D8Y0WRDQo2fW8lkHlZ4VozSa53DbmB7cx9GRsllssPYjV72H/wmo5wNMKb80i2R5mxnu3YBt+8sdXrQNI6zjEalSK3AH/J4RBTbI5zNosvbDahzFgs6Goqwah9dv+HzwtSYuaZHpVXui7hvLeNqxpzmG9pER8wNMK06s0TK7KtWfyOG1YET1ttHEjhE7Kz5+ZsNNKjWtXpTN4GTUu4atxsmldUUizkuQVvmST+9tnVoimDM0M+DrFHXfA+xRvZL6sXFVQ41byd+UdFQusUZAeX/l/FdCQtv7v3+KqFI3HV96ZxJVy0uMr70zicjkpWHha/mWJpGDhaYlKE0jBwtMSlcpIwcLT8tXKSMHC0/It3jBj5HrllVeEW/QToe2JZIVVr30AAAAASUVORK5CYII=';
-icon.style.position = 'absolute';
-icon.style.width = '48px';
-icon.style.height = '48px';
-icon.style.cursor = 'pointer';
-icon.style.zIndex = '10000';
-icon.style.opacity = '1'; // 设置为不透明
-document.body.appendChild(icon);
-
-// 添加临时启用文本选择的功能
-function enableTextSelection(element) {
-  if (!element) return;
-  
-  const originalStyles = {
-    userSelect: element.style.userSelect,
-    webkitUserSelect: element.style.webkitUserSelect,
-    mozUserSelect: element.style.mozUserSelect,
-    msUserSelect: element.style.msUserSelect
-  };
-
-  element.style.userSelect = 'text';
-  element.style.webkitUserSelect = 'text';
-  element.style.mozUserSelect = 'text';
-  element.style.msUserSelect = 'text';
-
-  return originalStyles;
-}
-
-function restoreTextSelection(element, originalStyles) {
-  if (!element || !originalStyles) return;
-  
-  element.style.userSelect = originalStyles.userSelect;
-  element.style.webkitUserSelect = originalStyles.webkitUserSelect;
-  element.style.mozUserSelect = originalStyles.mozUserSelect;
-  element.style.msUserSelect = originalStyles.msUserSelect;
-}
-
-// 修改鼠标事件监听
-document.addEventListener('mousedown', function(event) {
-  const target = event.target;
-  const computedStyle = window.getComputedStyle(target);
-  
-  if (computedStyle.userSelect === 'none' || 
-      computedStyle.webkitUserSelect === 'none') {
-    const originalStyles = enableTextSelection(target);
+  // 创建容器
+  let container = document.getElementById('emby-query-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'emby-query-container';
     
-    // 在mouseup时恢复样式
-    const restoreStyles = function(e) {
-      restoreTextSelection(target, originalStyles);
-      document.removeEventListener('mouseup', restoreStyles);
+    // 设置容器样式 - 使用固定定位避免滚动问题
+    container.style.cssText = `
+      position: fixed !important;
+      width: 56px !important;
+      height: 56px !important;
+      z-index: 2147483647 !important;
+      display: none;
+      pointer-events: none !important;
+    `;
+    
+    // 创建图标图片
+    const img = document.createElement('img');
+    img.src = chrome.runtime.getURL('images/icon48.png');
+    img.style.cssText = `
+      width: 48px !important;
+      height: 48px !important;
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      border-radius: 6px !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+      background: white !important;
+      padding: 4px !important;
+      box-sizing: border-box !important;
+      display: block !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+    `;
+    
+    // 创建备用文字按钮（如果图片加载失败）
+    const btn = document.createElement('button');
+    btn.textContent = 'Emby';
+    btn.style.cssText = `
+      width: 48px !important;
+      height: 48px !important;
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      border-radius: 6px !important;
+      border: none !important;
+      background: #2196F3 !important;
+      color: white !important;
+      font-size: 12px !important;
+      font-weight: bold !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      display: none;
+    `;
+    
+    container.appendChild(img);
+    container.appendChild(btn);
+    document.body.appendChild(container);
+    
+    // 图片加载失败时显示按钮
+    img.onerror = function() {
+      img.style.display = 'none';
+      btn.style.display = 'block';
     };
-    
-    document.addEventListener('mouseup', restoreStyles);
   }
-});
 
-// 使图标跟随鼠标选中的文本位置
-document.addEventListener('mouseup', (event) => {
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText) {
-    const range = window.getSelection().getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-    // 修改位置计算，将图标放在选中文本的右边
-    icon.style.left = `${rect.right + scrollX + 8}px`;  // 右边距离选中文本8像素
-    icon.style.top = `${rect.top + scrollY + (rect.height - icon.height) / 2}px`;  // 垂直居中
-    icon.style.display = 'block';
-  } else {
-    icon.style.display = 'none';
+  const img = container.querySelector('img');
+  const btn = container.querySelector('button');
+
+  // 获取选中文本
+  function getSelectedText() {
+    const sel = window.getSelection();
+    return sel ? sel.toString().trim() : '';
   }
-});
 
-// 修改点击图标时的处理
-icon.addEventListener('click', function(e) {
-  e.stopPropagation();  // 阻止事件冒泡，防止触发 document 的 click
-  const selection = window.getSelection();
-  const selectedText = selection.toString().trim();
+  // 显示图标
+  function showIcon() {
+    const text = getSelectedText();
+    if (!text) {
+      container.style.display = 'none';
+      return;
+    }
+
+    try {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      if (rect.width === 0 && rect.height === 0) return;
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const size = 56;
+      const gap = 8;
+
+      // 计算位置
+      let left = rect.right + gap;
+      let top = rect.top + (rect.height - size) / 2;
+
+      // 边界检查
+      if (left + size > vw) left = rect.left - size - gap;
+      if (left < 0) left = gap;
+      if (top < 0) top = gap;
+      if (top + size > vh) top = vh - size - gap;
+
+      container.style.left = left + 'px';
+      container.style.top = top + 'px';
+      container.style.display = 'block';
+    } catch (e) {
+      console.error('EmbyQuery showIcon error:', e);
+    }
+  }
+
+  // 隐藏图标
+  function hideIcon() {
+    container.style.display = 'none';
+  }
+
+  // 发送消息
+  function sendMessage() {
+    const text = getSelectedText();
+    if (!text) return;
+
+    try {
+      if (!chrome.runtime || !chrome.runtime.id) {
+        console.error('EmbyQuery: extension not available');
+        return;
+      }
+      chrome.runtime.sendMessage({ 
+        action: 'processText', 
+        text: text 
+      }, function(response) {
+        // 可选：处理响应
+      });
+      hideIcon();
+    } catch (e) {
+      console.error('EmbyQuery sendMessage error:', e);
+    }
+  }
+
+  // 点击处理函数
+  function handleClick(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }
+    sendMessage();
+    return false;
+  }
+
+  // 绑定点击事件 - 多种方式确保触发
+  img.addEventListener('mousedown', handleClick, true);
+  img.addEventListener('click', handleClick, true);
+  img.addEventListener('mouseup', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
   
-  if (selectedText) {
-    const range = selection.getRangeAt(0);
-    const element = range.commonAncestorContainer.parentElement;
-    
-    // 临时启用选择以确保能获取到文本
-    const originalStyles = enableTextSelection(element);
-    
-    chrome.runtime.sendMessage({ 
-      action: 'processText', 
-      text: selectedText 
-    });
-    
-    // 恢复原始样式
-    restoreTextSelection(element, originalStyles);
-    
-    // 发送消息后隐藏图标
-    icon.style.display = 'none';
-  } else {
-    alert('请先选择文本');
-  }
-});
+  btn.addEventListener('mousedown', handleClick, true);
+  btn.addEventListener('click', handleClick, true);
 
-// 点击页面其他地方时隐藏图标
-document.addEventListener('click', function(event) {
-  if (event.target !== icon && icon.style.display === 'block') {
-    icon.style.display = 'none';
-  }
-});
+  // 鼠标按下时隐藏图标
+  document.addEventListener('mousedown', function(e) {
+    if (e.target === img || e.target === btn) return;
+    hideIcon();
+  }, true);
 
-// ESC 键隐藏图标
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && icon.style.display === 'block') {
-    icon.style.display = 'none';
-  }
-});
+  // 鼠标释放时显示图标
+  document.addEventListener('mouseup', function(e) {
+    if (e.target === img || e.target === btn) return;
+    setTimeout(showIcon, 50);
+  });
+
+  // 点击页面其他地方隐藏
+  document.addEventListener('click', function(e) {
+    if (e.target !== img && e.target !== btn && e.target !== container) {
+      hideIcon();
+    }
+  }, true);
+
+  // ESC 隐藏
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideIcon();
+  });
+
+})();
