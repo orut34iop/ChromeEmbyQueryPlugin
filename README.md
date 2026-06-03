@@ -29,11 +29,11 @@ git clone https://github.com/orut34iop/ChromeEmbyQueryPlugin.git
 ### 1. 安装 Python 依赖
 
 ```bash
-# Windows
-pip install -r requirements.txt
+# 使用 uv 同步依赖
+uv sync
 
-# Ubuntu/Mac
-pip3 install -r requirements.txt
+# 或使用 pip 兼容安装
+pip install -r requirements.txt
 ```
 
 ### 2. 配置后台服务
@@ -60,7 +60,13 @@ chmod +x server.sh
 
 1. 打开 Chrome，访问 `chrome://extensions/`
 2. 开启右上角的"开发者模式"
-3. 点击"加载已解压的扩展程序"，选择本项目目录
+3. 生成干净的扩展目录：
+   ```powershell
+   .\build_extension.ps1
+   ```
+4. 点击"加载已解压的扩展程序"，选择 `C:\dev\ChromeEmbyQueryPlugin\dist\extension`
+
+不要直接选择项目根目录。项目根目录包含 `.venv`、测试文件和 Python 缓存，Chrome 会扫描到 `__pycache__` 等以下划线开头的文件夹并拒绝加载。
 
 ### 4. 配置扩展
 
@@ -78,7 +84,7 @@ chmod +x server.sh
 
 ## 系统要求
 
-- Python 3.6+
+- Python 3.8+
 - Chrome 浏览器
 - 运行中的 Emby 服务器
 - 系统支持：
@@ -109,9 +115,28 @@ chmod +x server.sh
 - API Key 需要在 Emby 管理界面生成
 - 后端服务默认运行在 5000 端口
 - 支持 http 和 https 网站
+- 修改后端端口时，需要同步修改 `manifest.json` 的 `host_permissions` 和 `background.js` 的本地服务地址
 
 ## 安全提示
 
-- API Key 仅保存在本地浏览器中
+- API Key 保存在 `chrome.storage.local`，不会随 Chrome 账号同步
 - 所有请求均通过本地服务器中转
-- 不会向外部发送敏感信息
+- 本地后端会拒绝缺少扩展请求标识或来自普通网页 Origin 的 `/process` 请求
+- 源码中不再包含默认 Emby API Key；首次使用必须在扩展选项页手动配置
+
+## 开发验证
+
+```bash
+uv run python -m unittest discover -v
+node --check background.js
+node --check content.js
+node --check options.js
+```
+
+## 日志排查
+
+- 后端日志：使用 `run.bat` 前台启动服务，直接看命令行输出。
+- 扩展后台日志：打开 `chrome://extensions/`，找到 Emby Query，点击 Service Worker 的“检查”，在 Console 中过滤 `[EmbyQuery background]`。
+- 内容脚本日志：在目标网页按 F12 打开开发者工具，在 Console 中过滤 `[EmbyQuery content]`。
+
+工具栏图标查询的正常日志顺序通常是：内容脚本发送选区缓存，后台缓存选区，工具栏图标点击，命中选区缓存，开始处理查询，查询成功或查询失败。

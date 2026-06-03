@@ -1,14 +1,32 @@
-const DEFAULT_HOST = 'http://192.168.2.43:8096';
-const DEFAULT_API_KEY = 'd3928cf0934b4280be51ff33ce8dfeca';
+function loadConfig(callback) {
+  chrome.storage.local.get({
+    embyHost: '',
+    apiKey: ''
+  }, function(localItems) {
+    if (localItems.embyHost || localItems.apiKey) {
+      callback(localItems);
+      return;
+    }
+
+    chrome.storage.sync.get({
+      embyHost: '',
+      apiKey: ''
+    }, function(syncItems) {
+      if (syncItems.embyHost || syncItems.apiKey) {
+        chrome.storage.local.set(syncItems, function() {
+          chrome.storage.sync.remove(['embyHost', 'apiKey']);
+        });
+      }
+      callback(syncItems);
+    });
+  });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   // 加载保存的设置
-  chrome.storage.sync.get({
-    embyHost: DEFAULT_HOST,
-    apiKey: DEFAULT_API_KEY
-  }, function(items) {
-    document.getElementById('embyHost').value = items.embyHost || DEFAULT_HOST;
-    document.getElementById('apiKey').value = items.apiKey || DEFAULT_API_KEY;
+  loadConfig(function(items) {
+    document.getElementById('embyHost').value = items.embyHost || '';
+    document.getElementById('apiKey').value = items.apiKey || '';
   });
 });
 
@@ -39,10 +57,11 @@ document.getElementById('save').addEventListener('click', function() {
     return;
   }
   
-  chrome.storage.sync.set({
+  chrome.storage.local.set({
     embyHost: embyHost,
     apiKey: apiKey
   }, function() {
+    chrome.storage.sync.remove(['embyHost', 'apiKey']);
     status.style.color = '#27ae60';
     status.textContent = '设置已保存！';
     setTimeout(function() {

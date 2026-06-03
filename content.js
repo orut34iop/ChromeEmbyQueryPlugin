@@ -73,6 +73,17 @@
 
   const img = container.querySelector('img');
   const btn = container.querySelector('button');
+  let lastSelectedText = '';
+  let lastSentText = '';
+
+  function debugLog(...args) {
+    console.log('[EmbyQuery content]', ...args);
+  }
+
+  function textPreview(text) {
+    const value = String(text || '');
+    return value.length > 30 ? value.slice(0, 30) + '...' : value;
+  }
 
   // 获取选中文本
   function getSelectedText() {
@@ -80,9 +91,44 @@
     return sel ? sel.toString().trim() : '';
   }
 
+  function updateLastSelectedText() {
+    const text = getSelectedText();
+    if (text) {
+      lastSelectedText = text;
+      sendSelectionCache(text, 'selectionchange');
+    }
+    return text;
+  }
+
+  function sendSelectionCache(text, source) {
+    const selectedText = String(text || '').trim();
+    if (selectedText === lastSentText) return;
+
+    lastSentText = selectedText;
+    debugLog(selectedText ? '发送选区缓存' : '清空选区缓存', {
+      source,
+      length: selectedText.length,
+      preview: textPreview(selectedText)
+    });
+
+    try {
+      chrome.runtime.sendMessage({
+        action: 'cacheSelectedText',
+        text: selectedText,
+        source
+      }, function() {
+        if (chrome.runtime.lastError) {
+          debugLog('发送选区缓存失败', chrome.runtime.lastError.message);
+        }
+      });
+    } catch (e) {
+      debugLog('发送选区缓存异常', e.message);
+    }
+  }
+
   // 显示图标
   function showIcon() {
-    const text = getSelectedText();
+    const text = updateLastSelectedText();
     if (!text) {
       container.style.display = 'none';
       return;
@@ -127,7 +173,7 @@
 
   // 发送消息
   function sendMessage() {
-    const text = getSelectedText();
+    const text = getSelectedText() || lastSelectedText;
     if (!text) return;
 
     try {
@@ -139,7 +185,11 @@
         action: 'processText', 
         text: text 
       }, function(response) {
-        // 可选：处理响应
+        if (chrome.runtime.lastError) {
+          console.error('EmbyQuery message error:', chrome.runtime.lastError.message);
+          return;
+        }
+        debugLog('浮标查询响应', response);
       });
       hideIcon();
     } catch (e) {
@@ -172,6 +222,8 @@
   // 鼠标按下时隐藏图标
   document.addEventListener('mousedown', function(e) {
     if (e.target === img || e.target === btn) return;
+    lastSelectedText = '';
+    sendSelectionCache('', 'mousedown');
     hideIcon();
   }, true);
 
@@ -179,6 +231,10 @@
   document.addEventListener('mouseup', function(e) {
     if (e.target === img || e.target === btn) return;
     setTimeout(showIcon, 50);
+  });
+
+  document.addEventListener('selectionchange', function() {
+    updateLastSelectedText();
   });
 
   // 点击页面其他地方隐藏
@@ -190,7 +246,23 @@
 
   // ESC 隐藏
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') hideIcon();
+    if (e.key === 'Escape') {
+      lastSelectedText = '';
+      sendSelectionCache('', 'escape');
+      hideIcon();
+    }
+  });
+
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === 'getSelectedText') {
+      const text = getSelectedText() || lastSelectedText;
+      debugLog('后台读取选区', {
+        hasText: Boolean(text),
+        length: text.length,
+        preview: textPreview(text)
+      });
+      sendResponse({ text: text });
+    }
   });
 
 })();

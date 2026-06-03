@@ -11,6 +11,9 @@ ENV/
 # UV
 .uv/
 
+# Build outputs
+dist/
+
 # IDE
 .vscode/
 .idea/

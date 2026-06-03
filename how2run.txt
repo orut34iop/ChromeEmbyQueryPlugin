@@ -38,6 +38,20 @@ Ubuntu/Linux:
 
 
 ========================
+加载 Chrome 扩展
+========================
+
+先生成干净的扩展目录:
+    .\build_extension.ps1
+
+然后在 chrome://extensions/ 中点击“加载已解压的扩展程序”，选择:
+    C:\dev\ChromeEmbyQueryPlugin\dist\extension
+
+不要直接加载项目根目录。项目根目录包含 .venv、测试文件和 Python 缓存，
+Chrome 会因为 __pycache__ 等以下划线开头的目录拒绝加载。
+
+
+========================
 常用命令
 ========================
 
@@ -69,3 +83,36 @@ pyproject.toml - uv 项目配置和依赖
 
 浏览器访问: http://127.0.0.1:5000/health
 返回: {"status": "ok"}
+
+
+========================
+开发验证
+========================
+
+后端单元测试:
+    uv run python -m unittest discover -v
+
+JavaScript 语法检查:
+    node --check background.js
+    node --check content.js
+    node --check options.js
+
+
+========================
+日志排查
+========================
+
+后端日志:
+    使用 run.bat 前台启动服务，查看命令行输出。
+
+扩展后台日志:
+    chrome://extensions/ -> Emby Query -> Service Worker “检查”
+    Console 中过滤 [EmbyQuery background]
+
+内容脚本日志:
+    在目标网页按 F12 打开开发者工具
+    Console 中过滤 [EmbyQuery content]
+
+工具栏图标查询正常日志顺序:
+    内容脚本发送选区缓存 -> 后台缓存选区 -> 工具栏图标点击
+    -> 命中选区缓存 -> 开始处理查询 -> 查询成功/查询失败

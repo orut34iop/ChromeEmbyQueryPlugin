@@ -4,9 +4,9 @@
   "version": "1.0",
   "description": "Query selected name in Emby server",
   "icons": {
-    "32": "images/icon32.png",    // 扩展管理页面和安装时
-    "48": "images/icon48.png",    // 扩展管理页面和安装时
-    "128": "images/icon128.png"   // Chrome 网上应用店
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
   },
   "permissions": [
     "activeTab",
@@ -17,8 +17,8 @@
   ],
   "action": {
     "default_icon": {
-      "32": "images/icon32.png",  // 插件栏图标
-      "48": "images/icon48.png"   // 插件栏图标(高分辨率)
+      "32": "images/icon32.png",
+      "48": "images/icon48.png"
     }
   },
   "background": {
