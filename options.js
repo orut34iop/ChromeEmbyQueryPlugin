@@ -1,7 +1,7 @@
 function loadConfig(callback) {
   chrome.storage.local.get({
     serverType: 'jellyfin',
-    embyHost: '',
+    embyHost: 'http://127.0.0.1:8096',
     apiKey: ''
   }, function(localItems) {
     if (localItems.embyHost || localItems.apiKey) {

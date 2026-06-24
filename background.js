@@ -155,7 +155,7 @@ function getCachedSelection(tab, callback) {
 function getStoredConfig(callback) {
   chrome.storage.local.get({
     serverType: 'jellyfin',
-    embyHost: '',
+    embyHost: 'http://127.0.0.1:8096',
     apiKey: ''
   }, (localConfig) => {
     if (localConfig.embyHost || localConfig.apiKey) {
