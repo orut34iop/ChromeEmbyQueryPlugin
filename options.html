@@ -10,8 +10,8 @@
     }
     .option-row { margin: 10px 0; }
     label { display: inline-block; width: 120px; }
-    input { 
-      width: 300px; 
+    input, select {
+      width: 300px;
       padding: 5px;
       font-family: inherit;
     }
@@ -24,7 +24,14 @@
 </head>
 <body>
   <div class="option-row">
-    <label for="embyHost">Emby 服务器地址:</label>
+    <label for="serverType">服务器类型:</label>
+    <select id="serverType">
+      <option value="jellyfin">Jellyfin</option>
+      <option value="emby">Emby</option>
+    </select>
+  </div>
+  <div class="option-row">
+    <label for="embyHost">服务器地址:</label>
     <input type="text" id="embyHost" placeholder="例如: http://192.168.1.100:8096">
   </div>
   <div class="option-row">

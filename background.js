@@ -154,6 +154,7 @@ function getCachedSelection(tab, callback) {
 // 兼容旧版本 sync 存储，并迁移到 local，避免 API Key 继续随账号同步
 function getStoredConfig(callback) {
   chrome.storage.local.get({
+    serverType: 'jellyfin',
     embyHost: '',
     apiKey: ''
   }, (localConfig) => {
@@ -163,12 +164,13 @@ function getStoredConfig(callback) {
     }
 
     chrome.storage.sync.get({
+      serverType: 'emby',
       embyHost: '',
       apiKey: ''
     }, (syncConfig) => {
       if (syncConfig.embyHost || syncConfig.apiKey) {
         chrome.storage.local.set(syncConfig, () => {
-          chrome.storage.sync.remove(['embyHost', 'apiKey']);
+          chrome.storage.sync.remove(['serverType', 'embyHost', 'apiKey']);
         });
       }
       callback(syncConfig);
@@ -258,6 +260,7 @@ function processSelectedText(selectedText, tab, sendResponse) {
   }
 
   getStoredConfig(function(config) {
+    const serverType = config.serverType || 'jellyfin';
     const embyHost = (config.embyHost || '').trim();
     const apiKey = (config.apiKey || '').trim();
     if (!embyHost || !apiKey) {
@@ -274,6 +277,7 @@ function processSelectedText(selectedText, tab, sendResponse) {
       },
       body: JSON.stringify({
         text: selectedText,
+        serverType,
         embyHost,
         apiKey
       })

@@ -77,9 +77,11 @@ def normalize_emby_host(emby_host):
 
     return emby_host.rstrip('/')
 
-def search_emby(query, emby_host, api_key):
-    """搜索 Emby 库中的内容"""
-    url = f"{emby_host}/Items"
+def search_emby(query, emby_host, api_key, server_type='jellyfin'):
+    """搜索 Emby/Jellyfin 库中的内容"""
+    # Emby 使用 /emby/ 路径前缀，Jellyfin 直接使用 /
+    api_prefix = '/emby' if server_type == 'emby' else ''
+    url = f"{emby_host}{api_prefix}/Items"
     
     params = {
         'api_key': api_key,
@@ -116,7 +118,7 @@ def search_emby(query, emby_host, api_key):
         else:
             show_results += f"{name} ({year})  --->  {path}\n"
             # 查询季的信息
-            seasons_url = f"{emby_host}/Shows/{item['Id']}/Seasons"
+            seasons_url = f"{emby_host}{api_prefix}/Shows/{item['Id']}/Seasons"
             seasons_params = {
                 'api_key': api_key,
                 'Fields': 'TotalRecordCount'
@@ -134,7 +136,7 @@ def search_emby(query, emby_host, api_key):
                 show_results += f"第 {season_number} 季:\n"
 
                 # 查询每集的信息
-                episodes_url = f"{emby_host}/Shows/{item['Id']}/Episodes"
+                episodes_url = f"{emby_host}{api_prefix}/Shows/{item['Id']}/Episodes"
                 episodes_params = {
                     'api_key': api_key,
                     'SeasonId': season['Id'],
@@ -179,19 +181,23 @@ def process_text():
         text = data.get('text', '').strip()
         if not text:
             return jsonify({'error': '搜索文本不能为空'}), 400
-            
+
+        server_type = data.get('serverType', 'jellyfin').strip()
+        if server_type not in ('emby', 'jellyfin'):
+            server_type = 'jellyfin'
+
         emby_host = data.get('embyHost', '').strip()
         api_key = data.get('apiKey', '').strip()
-        
+
         if not emby_host or not api_key:
-            return jsonify({'error': 'Emby 服务器地址和 API Key 不能为空'}), 400
+            return jsonify({'error': '服务器地址和 API Key 不能为空'}), 400
 
         emby_host = normalize_emby_host(emby_host)
-        
-        logger.info(f"搜索查询: '{text}' 来自 {request.remote_addr}")
-        
-        # 调用 Emby 搜索函数，传入配置
-        result = search_emby(text, emby_host=emby_host, api_key=api_key)
+
+        logger.info(f"搜索查询: '{text}' [{server_type}] 来自 {request.remote_addr}")
+
+        # 调用搜索函数，传入配置
+        result = search_emby(text, emby_host=emby_host, api_key=api_key, server_type=server_type)
         
         return jsonify({'result': result})
     except requests.Timeout:
