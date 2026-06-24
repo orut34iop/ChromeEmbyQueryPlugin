@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import re
 import requests
 import logging
 import time
@@ -179,6 +180,11 @@ def process_text():
             return jsonify({'error': '无效的请求数据'}), 400
             
         text = data.get('text', '').strip()
+        if not text:
+            return jsonify({'error': '搜索文本不能为空'}), 400
+
+        # 去除搜索文本末尾的年份（例如 "甜木兰 (2020)" -> "甜木兰"）
+        text = re.sub(r'\s*[(（]?\s*(19|20)\d{2}\s*[)）]?\s*$', '', text).strip()
         if not text:
             return jsonify({'error': '搜索文本不能为空'}), 400
 
