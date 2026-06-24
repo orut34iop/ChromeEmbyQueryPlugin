@@ -26,21 +26,30 @@
 下载插件代码到本地：
 git clone https://github.com/orut34iop/ChromeEmbyQueryPlugin.git
 
-### 1. 安装 Python 依赖
+### 1. 安装 uv 并同步 Python 依赖
+
+本项目使用 [uv](https://docs.astral.sh/uv/) 管理 Python 虚拟环境和依赖。
 
 ```bash
-# Windows
-pip install -r requirements.txt
+# 安装 uv（如果尚未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Ubuntu/Mac
-pip3 install -r requirements.txt
+# 同步依赖（会自动创建 .venv 虚拟环境）
+uv sync
 ```
+
+如果不使用 uv，也可以手动创建虚拟环境并通过 `pip install -r requirements.txt` 安装依赖。
 
 ### 2. 配置后台服务
 
+`server.sh` 会自动检测 `uv`，优先使用 `uv run python server.py` 运行服务；如果未安装 `uv`，则回退到 `.venv/bin/python`。
+
 #### Windows:
-- 双击 `server.bat`，会自动配置开机启动
-- 启动服务后可以关闭命令行窗口
+- 手动启动服务（推荐）：
+  ```powershell
+  uv run python server.py
+  ```
+- `server.bat` 是旧版辅助脚本，未针对 uv 更新，不建议使用。
 
 #### Ubuntu:
 ```bash
@@ -56,11 +65,17 @@ chmod +x server.sh
 
 注意：这个步骤只需要安装时执行一次，安装插件后每次开机会自动运行后台脚本，所以请不要删除该插件文件夹
 
-### 3. 加载 Chrome 扩展
+### 3. 构建并加载 Chrome 扩展
 
-1. 打开 Chrome，访问 `chrome://extensions/`
-2. 开启右上角的"开发者模式"
-3. 点击"加载已解压的扩展程序"，选择本项目目录
+1. 构建干净的扩展目录：
+   ```bash
+   uv run python build.py
+   ```
+   这会生成 `dist/` 文件夹，里面只包含扩展必需的清单、脚本和图标文件。
+
+2. 打开 Chrome，访问 `chrome://extensions/`
+3. 开启右上角的"开发者模式"
+4. 点击"加载已解压的扩展程序"，选择本项目的 **`dist/`** 目录（不要选择项目根目录，否则会因为 `__pycache__` 等文件导致加载失败）
 
 ### 4. 配置扩展
 
@@ -105,10 +120,11 @@ chmod +x server.sh
 
 ## 注意事项
 
-- 确保 Emby 服务器可访问
-- API Key 需要在 Emby 管理界面生成
-- 后端服务默认运行在 5000 端口
+- 确保 Jellyfin / Emby 服务器可访问
+- API Key 需要在 Jellyfin / Emby 管理界面生成
+- 后端服务默认运行在 3000 端口
 - 支持 http 和 https 网站
+- 后端默认只监听 `127.0.0.1`，不会暴露到局域网其他设备
 
 ## 安全提示
 

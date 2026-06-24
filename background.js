@@ -13,7 +13,7 @@ function processSelectedText(selectedText, tab) {
     embyHost: 'http://192.168.2.42:8096',
     apiKey: '850d6a3a78bc4ec6b584077b34b2a956'
   }, function(config) {
-    fetch('http://localhost:5000/process', {
+    fetch('http://localhost:3000/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

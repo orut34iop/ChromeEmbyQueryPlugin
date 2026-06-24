@@ -1,0 +1,18 @@
+[project]
+name = "ChromeEmbyQueryPlugin"
+version = "1.0.0"
+description = "Chrome extension + local Flask backend for querying Emby/Jellyfin media libraries"
+requires-python = ">=3.10"
+dependencies = [
+    "flask",
+    "flask-cors",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.uv]
+python-preference = "only-managed"
