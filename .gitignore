@@ -3,24 +3,26 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Virtual environment
+.Python
+.venv/
 venv/
-env/
 ENV/
 
-# Build output
-dist/
-build/
+# UV
+.uv/
 
-# macOS
-.DS_Store
+# Build outputs
+dist/
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log

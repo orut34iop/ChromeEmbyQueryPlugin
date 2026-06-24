@@ -26,30 +26,25 @@
 下载插件代码到本地：
 git clone https://github.com/orut34iop/ChromeEmbyQueryPlugin.git
 
-### 1. 安装 uv 并同步 Python 依赖
-
-本项目使用 [uv](https://docs.astral.sh/uv/) 管理 Python 虚拟环境和依赖。
+### 1. 安装 Python 依赖
 
 ```bash
-# 安装 uv（如果尚未安装）
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 同步依赖（会自动创建 .venv 虚拟环境）
+# 使用 uv 同步依赖
 uv sync
+
+# 或使用 pip 兼容安装
+pip install -r requirements.txt
 ```
 
-如果不使用 uv，也可以手动创建虚拟环境并通过 `pip install -r requirements.txt` 安装依赖。
-
 ### 2. 配置后台服务
-
-`server.sh` 会自动检测 `uv`，优先使用 `uv run python server.py` 运行服务；如果未安装 `uv`，则回退到 `.venv/bin/python`。
 
 #### Windows:
 - 手动启动服务（推荐）：
   ```powershell
   uv run python server.py
   ```
-- `server.bat` 是旧版辅助脚本，未针对 uv 更新，不建议使用。
+- 或使用旧版辅助脚本：`server.bat`（未针对 uv 更新，不建议使用）
+- 启动服务后可以关闭命令行窗口
 
 #### Ubuntu:
 ```bash
@@ -65,17 +60,24 @@ chmod +x server.sh
 
 注意：这个步骤只需要安装时执行一次，安装插件后每次开机会自动运行后台脚本，所以请不要删除该插件文件夹
 
-### 3. 构建并加载 Chrome 扩展
+### 3. 加载 Chrome 扩展
 
-1. 构建干净的扩展目录：
-   ```bash
-   uv run python build.py
-   ```
-   这会生成 `dist/` 文件夹，里面只包含扩展必需的清单、脚本和图标文件。
+1. 打开 Chrome，访问 `chrome://extensions/`
+2. 开启右上角的"开发者模式"
+3. 生成干净的扩展目录：
+   - **跨平台（推荐）**：
+     ```bash
+     uv run python build.py
+     ```
+   - **Windows**：
+     ```powershell
+     .\build_extension.ps1
+     ```
+4. 点击"加载已解压的扩展程序"，选择生成的扩展目录：
+   - `build.py` 生成的是项目根目录下的 `dist/`
+   - `build_extension.ps1` 生成的是 `dist\extension`
 
-2. 打开 Chrome，访问 `chrome://extensions/`
-3. 开启右上角的"开发者模式"
-4. 点击"加载已解压的扩展程序"，选择本项目的 **`dist/`** 目录（不要选择项目根目录，否则会因为 `__pycache__` 等文件导致加载失败）
+不要直接选择项目根目录。项目根目录包含 `.venv`、测试文件和 Python 缓存，Chrome 会扫描到 `__pycache__` 等以下划线开头的文件夹并拒绝加载。
 
 ### 4. 配置扩展
 
@@ -93,9 +95,9 @@ chmod +x server.sh
 
 ## 系统要求
 
-- Python 3.6+
+- Python 3.8+
 - Chrome 浏览器
-- 运行中的 Emby 服务器
+- 运行中的 Emby / Jellyfin 服务器
 - 系统支持：
   - Windows 10/11
   - Ubuntu 20.04+
@@ -120,14 +122,31 @@ chmod +x server.sh
 
 ## 注意事项
 
-- 确保 Jellyfin / Emby 服务器可访问
-- API Key 需要在 Jellyfin / Emby 管理界面生成
-- 后端服务默认运行在 3000 端口
-- 支持 http 和 https 网站
-- 后端默认只监听 `127.0.0.1`，不会暴露到局域网其他设备
+- 确保 Emby / Jellyfin 服务器可访问
+- API Key 需要在 Emby / Jellyfin 管理界面生成
+- 后端服务默认运行在 3000 端口（避免 macOS AirPlay 占用 5000 端口）
+- 如需修改端口，可设置环境变量 `EMBY_QUERY_PORT`，或修改 `config.py` 和 `background.js` 的本地服务地址
 
 ## 安全提示
 
-- API Key 仅保存在本地浏览器中
+- API Key 保存在 `chrome.storage.local`，不会随 Chrome 账号同步
 - 所有请求均通过本地服务器中转
-- 不会向外部发送敏感信息
+- 本地后端会拒绝缺少扩展请求标识或来自普通网页 Origin 的 `/process` 请求
+- 源码中不再包含默认 Emby API Key；首次使用必须在扩展选项页手动配置
+
+## 开发验证
+
+```bash
+uv run python -m unittest discover -v
+node --check background.js
+node --check content.js
+node --check options.js
+```
+
+## 日志排查
+
+- 后端日志：使用 `run.bat` 前台启动服务，直接看命令行输出。
+- 扩展后台日志：打开 `chrome://extensions/`，找到 Emby Query，点击 Service Worker 的“检查”，在 Console 中过滤 `[EmbyQuery background]`。
+- 内容脚本日志：在目标网页按 F12 打开开发者工具，在 Console 中过滤 `[EmbyQuery content]`。
+
+工具栏图标查询的正常日志顺序通常是：内容脚本发送选区缓存，后台缓存选区，工具栏图标点击，命中选区缓存，开始处理查询，查询成功或查询失败。
