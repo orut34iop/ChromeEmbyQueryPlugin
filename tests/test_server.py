@@ -94,7 +94,7 @@ class ServerTestCase(unittest.TestCase):
                 'timeout': timeout
             })
 
-            if url.endswith('/emby/Items'):
+            if url.endswith('/Items'):
                 return FakeResponse({
                     'Items': [{
                         'Type': 'Series',

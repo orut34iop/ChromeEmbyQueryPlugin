@@ -159,22 +159,10 @@ colorama==0.4.6 ; sys_platform == 'win32' \
 flask==3.0.3 ; python_full_version < '3.9' \
     --hash=sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3 \
     --hash=sha256:ceb27b0af3823ea2737928a4d99d125a06175b8512c445cbd9a9ce200ef76842
-    # via
-    #   emby-query-server
-    #   flask-cors
+    # via emby-query-server
 flask==3.1.3 ; python_full_version >= '3.9' \
     --hash=sha256:0ef0e52b8a9cd932855379197dd8f94047b359ca0a78695144304cb45f87c9eb \
     --hash=sha256:f4bcbefc124291925f1a26446da31a5178f9483862233b23c0c96a20701f670c
-    # via
-    #   emby-query-server
-    #   flask-cors
-flask-cors==5.0.0 ; python_full_version < '3.9' \
-    --hash=sha256:5aadb4b950c4e93745034594d9f3ea6591f734bb3662e16e255ffbf5e89c88ef \
-    --hash=sha256:b9e307d082a9261c100d8fb0ba909eec6a228ed1b60a8315fd85f783d61910bc
-    # via emby-query-server
-flask-cors==6.0.5 ; python_full_version >= '3.9' \
-    --hash=sha256:30c5031552cd59f620ac0c8211dac45b345d3b2df310e7721879e4f46ef9c601 \
-    --hash=sha256:68fcf75693e961f3af26683b23c4b9a8fb6b64de17d20d0c37b95e8de7ab2ed8
     # via emby-query-server
 idna==3.15 \
     --hash=sha256:048adeaf8c2d788c40fee287673ccaa74c24ffd8dcf09ffa555a2fbb59f10ac8 \
@@ -357,10 +345,6 @@ requests==2.34.2 ; python_full_version >= '3.10' \
     --hash=sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0 \
     --hash=sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed
     # via emby-query-server
-typing-extensions==4.15.0 ; python_full_version >= '3.9' and python_full_version < '3.11' \
-    --hash=sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466 \
-    --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
-    # via flask-cors
 urllib3==2.2.3 ; python_full_version < '3.9' \
     --hash=sha256:ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac \
     --hash=sha256:e7d814a81dad81e6caf2ec9fdedb284ecc9c73076b62654547cc64ccdcae26e9
@@ -380,9 +364,7 @@ werkzeug==3.0.6 ; python_full_version < '3.9' \
 werkzeug==3.1.8 ; python_full_version >= '3.9' \
     --hash=sha256:63a77fb8892bf28ebc3178683445222aa500e48ebad5ec77b0ad80f8726b1f50 \
     --hash=sha256:9bad61a4268dac112f1c5cd4630a56ede601b6ed420300677a869083d70a4c44
-    # via
-    #   flask
-    #   flask-cors
+    # via flask
 zipp==3.20.2 ; python_full_version < '3.9' \
     --hash=sha256:a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350 \
     --hash=sha256:bc9eb26f4506fda01b81bcde0ca78103b6e62f991b381fec825435c836edbc29

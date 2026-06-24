@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import requests
 import logging
 import time
@@ -35,7 +34,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 CLIENT_HEADER_NAME = 'X-Emby-Query-Client'
