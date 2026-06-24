@@ -183,8 +183,10 @@ def process_text():
         if not text:
             return jsonify({'error': '搜索文本不能为空'}), 400
 
-        # 去除搜索文本末尾的年份（例如 "甜木兰 (2020)" -> "甜木兰"）
-        text = re.sub(r'\s*[(（]?\s*(19|20)\d{2}\s*[)）]?\s*$', '', text).strip()
+        # 去除搜索文本末尾的年份/括号残留
+        # "甜木兰 (2020)" "木兰(202" "木兰 (" -> "甜木兰" / "木兰"
+        text = re.sub(r'\s*[(（]\s*(19|20)\d{0,2}\s*[)）]?\s*$', '', text).strip()
+        text = re.sub(r'\s*[(（]\s*$', '', text).strip()
         if not text:
             return jsonify({'error': '搜索文本不能为空'}), 400
 
