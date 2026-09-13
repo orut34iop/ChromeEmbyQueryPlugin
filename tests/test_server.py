@@ -13,7 +13,9 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise requests.HTTPError(f"HTTP {self.status_code}")
+            error = requests.HTTPError(f"HTTP {self.status_code}")
+            error.response = self
+            raise error
 
     def json(self):
         return self.payload
@@ -84,13 +86,31 @@ class ServerTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 504)
         self.assertIn('超时', response.get_json()['error'])
 
+    def test_process_explains_rejected_api_key_without_leaking_it(self):
+        with patch('server.requests.get', return_value=FakeResponse({}, status_code=401)):
+            response = self.post_process(
+                payload={
+                    'text': '测试影片',
+                    'embyHost': 'http://jellyfin.local:8096',
+                    'apiKey': 'secret-api-key',
+                    'serverType': 'jellyfin'
+                },
+                headers=self.extension_headers()
+            )
+
+        self.assertEqual(response.status_code, 502)
+        error_message = response.get_json()['error']
+        self.assertIn('重新生成 API Key', error_message)
+        self.assertNotIn('secret-api-key', error_message)
+
     def test_series_detail_requests_use_timeout(self):
         calls = []
 
-        def fake_get(url, params=None, timeout=None):
+        def fake_get(url, params=None, headers=None, timeout=None):
             calls.append({
                 'url': url,
                 'params': params,
+                'headers': headers,
                 'timeout': timeout
             })
 
@@ -129,6 +149,75 @@ class ServerTestCase(unittest.TestCase):
         self.assertIn('测试剧', result)
         self.assertIn('第一集', result)
         self.assertEqual([server.EMBY_API_TIMEOUT] * 3, [call['timeout'] for call in calls])
+        self.assertTrue(all(
+            call['headers'] == {
+                'Authorization': 'MediaBrowser Token="test-key"'
+            }
+            for call in calls
+        ))
+        self.assertTrue(all('api_key' not in call['params'] for call in calls))
+
+    def test_jellyfin_10_and_12_use_current_authorization_header(self):
+        calls = []
+
+        def fake_get(url, params=None, headers=None, timeout=None):
+            calls.append({
+                'url': url,
+                'params': params,
+                'headers': headers
+            })
+            return FakeResponse({'Items': []})
+
+        with patch('server.requests.get', side_effect=fake_get):
+            server.search_emby(
+                '测试影片',
+                'http://jellyfin.local:8096',
+                'jellyfin-api-key',
+                server_type='jellyfin'
+            )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]['url'], 'http://jellyfin.local:8096/Items')
+        self.assertEqual(
+            calls[0]['headers'],
+            {'Authorization': 'MediaBrowser Token="jellyfin-api-key"'}
+        )
+        self.assertNotIn('api_key', calls[0]['params'])
+        self.assertNotIn('SearchTypes', calls[0]['params'])
+
+    def test_emby_keeps_legacy_route_and_query_parameters(self):
+        calls = []
+
+        def fake_get(url, params=None, headers=None, timeout=None):
+            calls.append({
+                'url': url,
+                'params': params,
+                'headers': headers
+            })
+            return FakeResponse({'Items': []})
+
+        with patch('server.requests.get', side_effect=fake_get):
+            server.search_emby(
+                '测试影片',
+                'http://emby.local:8096',
+                'emby-api-key',
+                server_type='emby'
+            )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]['url'], 'http://emby.local:8096/emby/Items')
+        self.assertEqual(calls[0]['headers'], {})
+        self.assertEqual(calls[0]['params']['api_key'], 'emby-api-key')
+        self.assertEqual(calls[0]['params']['SearchTypes'], 'Name')
+
+    def test_jellyfin_rejects_api_key_header_injection(self):
+        with self.assertRaises(server.ConfigError):
+            server.search_emby(
+                '测试影片',
+                'http://jellyfin.local:8096',
+                'bad-key\nInjected: value',
+                server_type='jellyfin'
+            )
 
     def test_console_script_entrypoint_exists(self):
         self.assertTrue(callable(server.main))

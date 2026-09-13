@@ -78,23 +78,44 @@ def normalize_emby_host(emby_host):
 
     return emby_host.rstrip('/')
 
+def build_auth_headers(api_key, server_type):
+    """构造服务端鉴权头；Jellyfin 12 已默认禁用旧式 api_key 参数。"""
+    if server_type != 'jellyfin':
+        return {}
+
+    if any(character in api_key for character in ('"', '\r', '\n')):
+        raise ConfigError('API Key 格式不正确')
+
+    return {
+        'Authorization': f'MediaBrowser Token="{api_key}"'
+    }
+
 def search_emby(query, emby_host, api_key, server_type='jellyfin'):
     """搜索 Emby/Jellyfin 库中的内容"""
     # Emby 使用 /emby/ 路径前缀，Jellyfin 直接使用 /
     api_prefix = '/emby' if server_type == 'emby' else ''
     url = f"{emby_host}{api_prefix}/Items"
+    auth_headers = build_auth_headers(api_key, server_type)
     
     params = {
-        'api_key': api_key,
         'SearchTerm': query,
         'IncludeItemTypes': SEARCH_ITEM_TYPES,  # 只搜索电影和剧集
         'Recursive': 'true',
-        'SearchTypes': 'Name',  # 按名称搜索
         'Fields': SEARCH_FIELDS,
         'Limit': SEARCH_LIMIT  # 限制返回结果数量
     }
 
-    response = requests.get(url, params=params, timeout=EMBY_API_TIMEOUT)
+    if server_type == 'emby':
+        # 保留 Emby 的现有鉴权和名称搜索参数，避免影响 Emby 用户。
+        params['api_key'] = api_key
+        params['SearchTypes'] = 'Name'
+
+    response = requests.get(
+        url,
+        params=params,
+        headers=auth_headers,
+        timeout=EMBY_API_TIMEOUT
+    )
     response.raise_for_status()
     data = response.json()
 
@@ -120,13 +141,13 @@ def search_emby(query, emby_host, api_key, server_type='jellyfin'):
             show_results += f"{name} ({year})  --->  {path}\n"
             # 查询季的信息
             seasons_url = f"{emby_host}{api_prefix}/Shows/{item['Id']}/Seasons"
-            seasons_params = {
-                'api_key': api_key,
-                'Fields': 'TotalRecordCount'
-            }
+            seasons_params = {}
+            if server_type == 'emby':
+                seasons_params['api_key'] = api_key
             seasons_response = requests.get(
                 seasons_url,
                 params=seasons_params,
+                headers=auth_headers,
                 timeout=EMBY_API_TIMEOUT
             )
             seasons_response.raise_for_status()
@@ -139,13 +160,15 @@ def search_emby(query, emby_host, api_key, server_type='jellyfin'):
                 # 查询每集的信息
                 episodes_url = f"{emby_host}{api_prefix}/Shows/{item['Id']}/Episodes"
                 episodes_params = {
-                    'api_key': api_key,
                     'SeasonId': season['Id'],
                     'Fields': 'Path'
                 }
+                if server_type == 'emby':
+                    episodes_params['api_key'] = api_key
                 episodes_response = requests.get(
                     episodes_url,
                     params=episodes_params,
+                    headers=auth_headers,
                     timeout=EMBY_API_TIMEOUT
                 )
                 episodes_response.raise_for_status()
@@ -211,17 +234,28 @@ def process_text():
         
         return jsonify({'result': result})
     except requests.Timeout:
-        logger.error("请求 Emby 服务器超时")
-        return jsonify({'error': '连接 Emby 服务器超时'}), 504
+        logger.error("请求媒体服务器超时")
+        return jsonify({'error': '连接媒体服务器超时'}), 504
+    except requests.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else None
+        logger.error("媒体服务器返回 HTTP %s", status_code or '错误')
+        if status_code in (401, 403):
+            return jsonify({
+                'error': '媒体服务器拒绝了 API Key，请重新生成 API Key 并更新插件配置'
+            }), 502
+        return jsonify({
+            'error': f'媒体服务器返回 HTTP {status_code or "错误"}'
+        }), 502
     except requests.RequestException as e:
-        logger.error(f"请求 Emby 服务器失败: {e}")
-        return jsonify({'error': f'连接 Emby 服务器失败: {str(e)}'}), 502
+        # 不输出完整异常 URL，避免 Emby 旧式查询参数中的 API Key 进入日志或弹窗。
+        logger.error("连接媒体服务器失败: %s", type(e).__name__)
+        return jsonify({'error': '连接媒体服务器失败'}), 502
     except ConfigError as e:
         logger.error(f"请求参数错误: {e}")
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
-        logger.error(f"Emby 服务器响应不是有效 JSON: {e}")
-        return jsonify({'error': 'Emby 服务器响应格式不正确'}), 502
+        logger.error(f"媒体服务器响应不是有效 JSON: {e}")
+        return jsonify({'error': '媒体服务器响应格式不正确'}), 502
     except Exception as e:
         logger.error(f"处理请求时出错: {e}")
         return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
